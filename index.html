@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Christmas Gift 🎁</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: radial-gradient(#0b3d2e, #06261d);
+      font-family: Arial, sans-serif;
+      color: white;
+    }
+
+    /* Snow */
+    .snowflake {
+      position: fixed;
+      top: -10px;
+      color: white;
+      user-select: none;
+      pointer-events: none;
+      animation: fall linear infinite;
+    }
+
+    @keyframes fall {
+      to {
+        transform: translateY(110vh);
+      }
+    }
+
+    .gift-container {
+      position: relative;
+      text-align: center;
+      z-index: 2;
+    }
+
+    .gift {
+      font-size: 120px;
+    }
+
+    .lid {
+      position: absolute;
+      top: -40px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 80px;
+      opacity: 0;
+    }
+
+    /* Shake animation */
+    @keyframes shake {
+      0% { transform: translateX(0) rotate(0); }
+      25% { transform: translateX(-10px) rotate(-10deg); }
+      50% { transform: translateX(10px) rotate(10deg); }
+      75% { transform: translateX(-10px) rotate(-10deg); }
+      100% { transform: translateX(0) rotate(0); }
+    }
+
+    .shaking {
+      animation: shake 0.3s infinite;
+    }
+
+    /* Lid flying */
+    @keyframes flyOff {
+      0% { opacity: 1; transform: translate(-50%, 0) rotate(0); }
+      100% { opacity: 0; transform: translate(-50%, -200px) rotate(720deg); }
+    }
+
+    .fly {
+      animation: flyOff 1s forwards ease-out;
+    }
+
+    .message {
+      display: none;
+      margin-top: 20px;
+      font-size: 32px;
+    }
+
+    /* Motion permission button */
+    .motion-btn {
+      position: absolute;
+      bottom: 40px;
+      background: #ffffff;
+      color: #0b3d2e;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 20px;
+      font-size: 16px;
+      cursor: pointer;
+      z-index: 3;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="gift-container">
+    <div id="lid" class="lid">🎀</div>
+    <div id="gift" class="gift">🎁</div>
+    <div id="message" class="message">
+      🎉 Merry Christmas! 🎄<br>
+      Your gift is XBOX Ultimate Game Pass
+    </div>
+  </div>
+
+  <button id="motionBtn" class="motion-btn">Enable Motion 🎁</button>
+
+  <script>
+    let opened = false;
+    let shaking = false;
+    let lastShake = 0;
+
+    /* Snow */
+    function createSnow() {
+      const snow = document.createElement("div");
+      snow.className = "snowflake";
+      snow.textContent = "❄️";
+      snow.style.left = Math.random() * window.innerWidth + "px";
+      snow.style.fontSize = (Math.random() * 10 + 10) + "px";
+      snow.style.animationDuration = (Math.random() * 5 + 5) + "s";
+      document.body.appendChild(snow);
+      setTimeout(() => snow.remove(), 10000);
+    }
+    setInterval(createSnow, 200);
+
+    function startShakingAndOpen() {
+      if (opened || shaking) return;
+
+      shaking = true;
+      const gift = document.getElementById("gift");
+      const lid = document.getElementById("lid");
+
+      gift.classList.add("shaking");
+
+      setTimeout(() => {
+        gift.classList.remove("shaking");
+        lid.style.opacity = 1;
+        lid.classList.add("fly");
+        openGift();
+      }, 2000);
+    }
+
+    function openGift() {
+      if (opened) return;
+      opened = true;
+      document.getElementById("gift").textContent = "🎉";
+      document.getElementById("message").style.display = "block";
+    }
+
+    /* Click fallback */
+    document.getElementById("gift").addEventListener("click", startShakingAndOpen);
+
+    /* iOS motion permission */
+    const motionBtn = document.getElementById("motionBtn");
+
+    motionBtn.addEventListener("click", async () => {
+      if (typeof DeviceMotionEvent !== "undefined" &&
+          typeof DeviceMotionEvent.requestPermission === "function") {
+        const permission = await DeviceMotionEvent.requestPermission();
+        if (permission === "granted") {
+          motionBtn.style.display = "none";
+        }
+      } else {
+        motionBtn.style.display = "none";
+      }
+    });
+
+    /* Shake detection */
+    window.addEventListener("devicemotion", (event) => {
+      const acc = event.accelerationIncludingGravity;
+      if (!acc) return;
+
+      const strength = Math.abs(acc.x) + Math.abs(acc.y) + Math.abs(acc.z);
+      const now = Date.now();
+
+      if (strength > 25 && now - lastShake > 1500) {
+        lastShake = now;
+        startShakingAndOpen();
+      }
+    });
+  </script>
+
+</body>
+</html>
